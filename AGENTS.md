@@ -31,14 +31,28 @@ The primary goal is **high human readability and maintainability**. Code is read
 - Prefer pure functions that take the current game state and an action, returning a new game state rather than mutating state in place.
 - Keep domain logic completely separated from I/O (file system, network, terminal prints).
 
-### 1.5 Self-Documenting Code & Clean Comments
-- Let code structure and naming tell the story.
-- Do not write comments that describe *what* the code does (that is redundant).
-- Use comments only to document *why* a particular decision was made or to explain specific board game official rule references.
+### 1.5 Self-Documenting Code & Minimal Comments
+- Let the code structure, type hints, and naming do the talking.
+- **No redundant comments or noisy docstrings**: Do not add docstrings or inline comments to functions, methods, or properties whose name and signature already explain what they do.
+- **No meta-references in code**: Never reference `AGENTS.md`, "Clean Code principles", or task numbers inside source code comments or docstrings.
+- Aside from `# CONCEPT:` tags and brief module docstrings, only write a comment when explaining a non-obvious *why* or a tricky edge case.
 
 ### 1.6 Explicit Error Handling
 - Define domain-specific exceptions (e.g., `InvalidMoveError`, `RuleViolationError`, `TurnOrderError`).
 - Fail fast and provide meaningful, user-friendly error messages. Avoid returning `None` or silent boolean `False` when an operation is invalid.
+
+### 1.7 Educational Concept Tags (`# CONCEPT:`)
+- Because this is a learning and practice project, annotate key architectural, AI engineering, system design, and design pattern usages directly in the code using structured `# CONCEPT:` comments:
+  ```python
+  # CONCEPT: [Design Pattern] Interface Segregation Principle (ISP)
+  # Splitting a monolithic repository into focused protocols so clients only depend
+  # on the methods they actually use.
+  ```
+- Categories to highlight:
+  - `[AI Engineering]` (e.g., RAG chunking, vector embeddings, grounded generation, fallback pipelines, citation attribution)
+  - `[System Design]` (e.g., stateless compute, blob storage abstraction, idempotency, eventual consistency)
+  - `[Design Pattern]` (e.g., Repository, Strategy, Facade, Protocol/Structural Subtyping, Value Object, Immutable State Transition)
+- These `# CONCEPT:` tags are also indexed in `CONCEPTS.md` so they can be browsed in one place.
 
 ---
 
@@ -81,7 +95,9 @@ Whenever a task is mentioned, always activate and follow [`skills/task-workflow/
 3. **Devil's Advocate**: Spawn a Devil's Advocate subagent to critically grill and argue against the design plan; refine the plan based on its findings.
 4. **Design Mode & Approval**: Present the design and Devil's Advocate critique to the user, resolve trade-offs interactively, and wait for explicit user acceptance before coding.
 5. **Implement & Verify**: Implement tests (`tests/`) and code (`src/boardgamerules/`), then run `uv run pytest` and `uv run ruff check .`.
-6. **PR Review, Rebase & Done ([`skills/pr-review/SKILL.md`](skills/pr-review/SKILL.md))**: Spawn a separate PR Reviewer subagent focusing on **Security** and **Clean Code**. Once approved, move the task file into `tasks/done/`, commit, and rebase/merge onto `master`.
+6. **AI PR Review ([`skills/pr-review/SKILL.md`](skills/pr-review/SKILL.md))**: Spawn a separate PR Reviewer subagent focusing on **Security** and **Clean Code**, and resolve any findings until approved.
+7. **Human PR Review & Approval**: Present the PR summary and changed files to the user for human review, comments, or adjustments. Wait for explicit user approval.
+8. **Finalize, Rebase & Done**: Once the user approves the PR, move the task file into `tasks/done/`, commit, and rebase/merge onto `master`.
 
 ---
 

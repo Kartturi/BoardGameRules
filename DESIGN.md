@@ -84,6 +84,9 @@ The rules are downloaded to the rag system, so users can ask specific questions 
 - **PDF Text Extraction**: **PyMuPDF (`pymupdf` / `pymupdf4llm`)** — Extracts markdown-structured text and page numbers for accurate RAG citations.
 - **Frontend Stack**: **Vite + React + TypeScript + Tailwind CSS** in `frontend/`.
 - **Google Authentication**: **Google OAuth ID Token (`@react-oauth/google`)** verified by the FastAPI backend (`google-auth`), issuing a signed session JWT.
+- **Schema & Domain Modeling Strategy (Hybrid)**:
+  - **Inner Domain (`src/boardgamerules/domain/models.py`)**: Pure standard-library `@dataclass(frozen=True)` entities with zero third-party dependencies.
+  - **Outer Boundaries (`ai/` & `api/`)**: **Pydantic v2 (`BaseModel`)** DTOs for Gemini structured outputs (`response_schema` in Task 7) and FastAPI HTTP request/response validation (in Task 9).
 - **GCP Target Architecture**:
   - **Compute**: **Cloud Run Services** (Backend API & Frontend listening on `$PORT=8080`) + **Cloud Run Jobs** (for the Batch PDF Ingestion Job, triggered via Cloud Scheduler / Eventarc or CLI).
   - **PDF Storage Abstraction (`PdfStorage` Protocol)**: **Local filesystem folder** (`LocalPdfStorage`) for local Docker Compose development and **Google Cloud Storage (GCS) bucket** (`GcsPdfStorage`) for stateless GCP deployment.

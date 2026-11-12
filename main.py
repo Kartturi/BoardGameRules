@@ -1,27 +1,57 @@
-"""BoardGameRules entry point."""
+"""BoardGameRules entry point demonstrating core domain models."""
 
-from boardgamerules.domain.models import Action, GameState, Player
-from boardgamerules.engine.validator import validate_player_turn
+from boardgamerules.domain import (
+    GameManual,
+    ManualSource,
+    PendingPdfManual,
+    RuleAnswer,
+    RuleChunk,
+    normalize_game_id,
+)
 
 
 def main() -> None:
-    # 1. Initialize players
-    alice = Player(id="p1", name="Alice")
-    bob = Player(id="p2", name="Bob")
+    game_title = "The Settlers of Catan"
+    game_id = normalize_game_id(game_title)
 
-    # 2. Initialize game state
-    state = GameState(game_id="game-001", players=(alice, bob))
-    print(f"Game '{state.game_id}' started with players: {alice.name}, {bob.name}")
-    print(f"Current turn {state.turn_number}: Active player is {state.active_player.name}")
+    pending = PendingPdfManual(
+        pending_id="pdf-001",
+        file_key="incoming/catan_base_rules.pdf",
+        game_title=game_title,
+    )
+    completed = pending.mark_processing().mark_completed()
 
-    # 3. Simulate an action by the active player
-    action = Action(player_id="p1", action_type="ROLL_DICE")
-    validate_player_turn(state, action)
-    print(f"Action '{action.action_type}' by {state.active_player.name} validated successfully!")
+    manual = GameManual(
+        manual_id="man-001",
+        game_id=game_id,
+        game_title=game_title,
+        source=ManualSource.MANUAL_PDF,
+        summary_markdown="Trade, build, and settle the island of Catan to reach 10 victory points.",
+    )
 
-    # 4. Advance turn
-    next_state = state.advance_to_next_player()
-    print(f"Advanced turn: Next active player is {next_state.active_player.name}")
+    chunk = RuleChunk(
+        chunk_id="chunk-001",
+        game_id=game_id,
+        text="When a 7 is rolled, any player with more than 7 resource cards discards half.",
+        page_number=4,
+        section_title="The Robber",
+    )
+
+    answer = RuleAnswer(
+        game_id=game_id,
+        question="What happens when a 7 is rolled?",
+        answer_markdown=(
+            "Players with more than 7 cards discard half (rounded down), "
+            "and the active player moves the Robber."
+        ),
+        citations=(chunk,),
+        source=manual.source,
+    )
+
+    cited_page = answer.citations[0].page_number
+    print(f"Game '{manual.game_title}' (id={manual.game_id}, verified={manual.is_verified})")
+    print(f"PDF '{completed.file_key}' ingestion status: {completed.status}")
+    print(f"Q: {answer.question}\nA: {answer.answer_markdown} (cited page {cited_page})")
 
 
 if __name__ == "__main__":

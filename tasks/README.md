@@ -4,9 +4,9 @@ Each task is defined in a concise markdown file with an **Objective** and **Requ
 
 ## Completed Tasks (`tasks/done/`)
 1. **[Task 1: Project Bootstrap & Architecture Guidelines](done/task_001_project_bootstrap.md)**
+2. **[Task 2: Domain Models & Module Contracts](done/task_002_domain_models_and_module_contracts.md)**
 
 ## Task Backlog
-2. **[Task 2: Domain Models & Module Contracts](task_002_domain_models_and_module_contracts.md)**
 3. **[Task 3: NoSQL Database & Repositories](task_003_nosql_database_repositories.md)**
 4. **[Task 4: RAG Engine & Vector Store Module](task_004_rag_engine_and_vector_store.md)**
 5. **[Task 5: Batch PDF Ingestion Job](task_005_pdf_batch_ingestion_job.md)**

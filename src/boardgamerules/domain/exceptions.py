@@ -1,18 +1,43 @@
-"""Domain exceptions for BoardGameRules.
+"""Domain exceptions for BoardGameRules."""
 
-Explicit exceptions ensure that error conditions are clear, domain-specific,
-and easy to catch and handle without relying on generic Python errors.
-"""
+from __future__ import annotations
 
 
-class BoardGameError(Exception):
-    """Base exception for all BoardGameRules domain errors."""
+# CONCEPT: [Design Pattern] Domain Exception Hierarchy
+# Defining a single base domain exception (BoardGameRulesError) with specific subclasses
+# lets higher layers (like FastAPI exception handlers) map domain failures cleanly to HTTP
+# status codes (e.g., 400, 404, 502) without coupling domain code to HTTP frameworks.
+class BoardGameRulesError(Exception):
+    pass
 
 
-class RuleViolationError(BoardGameError):
-    """Raised when an action violates the rules of the game."""
+class DomainValidationError(BoardGameRulesError):
+    pass
 
-    def __init__(self, rule_name: str, reason: str) -> None:
-        self.rule_name = rule_name
-        self.reason = reason
-        super().__init__(f"Rule violation [{rule_name}]: {reason}")
+
+class ManualNotFoundError(BoardGameRulesError):
+    def __init__(self, game_id: str) -> None:
+        self.game_id = game_id
+        super().__init__(f"No indexed manual found for game_id '{game_id}'.")
+
+
+class RulebookNotFoundError(BoardGameRulesError):
+    def __init__(self, game_title: str) -> None:
+        self.game_title = game_title
+        super().__init__(f"Could not find an online rulebook for '{game_title}'.")
+
+
+class ExternalRuleFetchError(BoardGameRulesError):
+    pass
+
+
+class RagIngestionError(BoardGameRulesError):
+    pass
+
+
+class StorageOperationError(BoardGameRulesError):
+    pass
+
+
+class AiGenerationError(BoardGameRulesError):
+    pass
