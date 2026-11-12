@@ -1,15 +1,16 @@
 ---
 name: task-workflow
 description: >-
-  End-to-end task design and implementation workflow. Activate this skill whenever
-  the user mentions, defines, or asks to work on a task (e.g., "Task 2: ...", or
-  references a file in `tasks/`). Creates a dedicated git branch, drafts a design
-  plan, spawns a Devil's Advocate subagent to grill and challenge the design,
-  conducts an interactive design review with the user until accepted, and then
-  implements and verifies the solution.
+  End-to-end task design, implementation, and PR review workflow. Activate this
+  skill whenever the user mentions, defines, or asks to work on a task (e.g.,
+  "Task 2: ...", or references a file in `tasks/`). Creates a dedicated git branch,
+  drafts a design plan, spawns a Devil's Advocate subagent to grill the design,
+  conducts an interactive design review with the user until accepted, implements
+  the solution, runs a separate Security & Clean Code PR Reviewer subagent, and
+  when approved rebases onto `master` and moves the task into `tasks/done/`.
 ---
 
-# Task Workflow (Branch -> Design -> Devil's Advocate -> Design Mode -> Implement)
+# Task Workflow (Branch -> Design -> Devil's Advocate -> Design Mode -> Implement -> PR Review -> Rebase & Done)
 
 Follow these steps strictly in order whenever a task is mentioned or started. Do **not** skip ahead to implementation before the user explicitly accepts the design.
 
@@ -48,7 +49,7 @@ Inspect the codebase and draft a clear, concrete design plan covering:
 
 Before presenting the plan to the user, challenge it with a dedicated **Devil's Advocate** subagent:
 
-1. **Define or Invoke Subagent**:
+1. **Define & Invoke Subagent**:
    Use `define_subagent` (name: `devils-advocate`, `EnableWriteTools: false`) and `invoke_subagent` with `Role: "Devil's Advocate Reviewer"`:
    - Give the subagent the task requirements, relevant codebase context, and your proposed design plan.
    - Instruct the subagent to **argue against the design**, ruthlessly grilling it for:
@@ -88,4 +89,33 @@ Once the user accepts the design:
    uv run ruff check --fix .
    uv run ruff format .
    ```
-4. **Report Completion**: Summarize the implemented changes and verification results with clickable file links.
+
+---
+
+## Step 6: Subagent PR Review (Security & Clean Code), Rebase to `master` & Move to `tasks/done/`
+
+1. **Spawn PR Reviewer Subagent**:
+   Use `define_subagent` (name: `pr-reviewer`, `EnableWriteTools: false`) and `invoke_subagent` with `Role: "Security & Clean Code PR Reviewer"`:
+   - Instruct the subagent to inspect the branch changes (`git diff master...HEAD` / modified files) and perform a focused PR review checking:
+     - **Security**: No hardcoded secrets/credentials, safe path/file handling (no path traversal), strict input validation, safe external API/DB query handling, no sensitive data leaked in exceptions/logs.
+     - **Clean Code (`AGENTS.md`)**: Intention-revealing names, small single-responsibility functions, Command-Query Separation (CQS), immutability (`frozen=True`), explicit domain exceptions, and AAA unit test coverage.
+   - The subagent must return a verdict (`APPROVED` or `CHANGES_REQUESTED`) along with specific findings.
+2. **Address Findings**:
+   If `CHANGES_REQUESTED` or any security/clean-code issues are found, fix them, re-run `uv run pytest` and `uv run ruff check .`, and message the `pr-reviewer` subagent to verify until `APPROVED`.
+3. **Move Task to `tasks/done/` & Rebase onto `master`**:
+   Once the PR review is approved:
+   - Move the task file into `tasks/done/`:
+     ```bash
+     mkdir -p tasks/done
+     git mv tasks/task_<number>_<short_slug>.md tasks/done/task_<number>_<short_slug>.md
+     ```
+   - Update `tasks/README.md` to reflect the task under `tasks/done/`.
+   - Commit the changes on the feature branch, rebase onto `master`, and merge into `master`:
+     ```bash
+     git add -A
+     git commit -m "feat(task-<number>): <concise summary>"
+     git rebase master
+     git checkout master
+     git merge --ff-only feat/task-<number>-<short-slug>
+     ```
+4. **Report Completion**: Summarize the PR review verdict, implemented changes, and git status with clickable file links.

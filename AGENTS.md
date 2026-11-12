@@ -74,13 +74,14 @@ Tasks are kept lightweight and focused in `tasks/` (see `tasks/template.md`).
 - <Requirement 2>
 ```
 
-### Workflow (`task-workflow` Skill)
+### Workflow (`task-workflow` & `pr-review` Skills)
 Whenever a task is mentioned, always activate and follow [`skills/task-workflow/SKILL.md`](skills/task-workflow/SKILL.md):
 1. **Branch & Define**: Ensure `tasks/task_<number>_<short_slug>.md` is created and checkout a new branch (`feat/task-<number>-<short-slug>`).
 2. **Design Plan**: Draft the technical design and planned test cases.
 3. **Devil's Advocate**: Spawn a Devil's Advocate subagent to critically grill and argue against the design plan; refine the plan based on its findings.
 4. **Design Mode & Approval**: Present the design and Devil's Advocate critique to the user, resolve trade-offs interactively, and wait for explicit user acceptance before coding.
 5. **Implement & Verify**: Implement tests (`tests/`) and code (`src/boardgamerules/`), then run `uv run pytest` and `uv run ruff check .`.
+6. **PR Review, Rebase & Done ([`skills/pr-review/SKILL.md`](skills/pr-review/SKILL.md))**: Spawn a separate PR Reviewer subagent focusing on **Security** and **Clean Code**. Once approved, move the task file into `tasks/done/`, commit, and rebase/merge onto `master`.
 
 ---
 
