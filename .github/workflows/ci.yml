@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - "feat/**"
+  pull_request:
+    branches:
+      - master
+
+# CONCEPT: [System Design] Principle of Least Privilege in CI (GITHUB_TOKEN)
+# Restricting the workflow token to read-only repository contents prevents compromised
+# third-party actions or test dependencies from pushing code, modifying releases, or
+# mutating repository settings.
+permissions:
+  contents: read
+
+# CONCEPT: [System Design] CI Concurrency Deduplication & Preemption
+# Grouping by head_ref (for PRs) or ref (for branch pushes) deduplicates overlapping
+# push/PR triggers on the same feature branch and cancels superseded runs immediately,
+# while allowing master branch verification runs to always complete.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+jobs:
+  quality-and-tests:
+    name: Lint, Format, Concept Check & Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up uv and Python 3.14
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.14"
+
+      # CONCEPT: [System Design] Deterministic Locked Builds (--locked)
+      # Running uv sync --locked fails CI if pyproject.toml was modified without updating
+      # uv.lock, guaranteeing every developer and container runs identical transitive packages.
+      - name: Install locked dependencies
+        run: uv sync --locked --all-groups
+
+      - name: Run Ruff linter
+        run: uv run ruff check .
+
+      - name: Verify Ruff formatting
+        run: uv run ruff format --check .
+
+      - name: Verify CONCEPTS.md glossary is synchronized
+        run: uv run python scripts/collect_concepts.py --check
+
+      - name: Run unit tests
+        run: uv run pytest
