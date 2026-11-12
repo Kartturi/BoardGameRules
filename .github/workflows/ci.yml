@@ -4,10 +4,7 @@ on:
   push:
     branches:
       - master
-      - "feat/**"
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:
 
 # CONCEPT: [System Design] Principle of Least Privilege in CI (GITHUB_TOKEN)
 # Restricting the workflow token to read-only repository contents prevents compromised
@@ -17,12 +14,11 @@ permissions:
   contents: read
 
 # CONCEPT: [System Design] CI Concurrency Deduplication & Preemption
-# Grouping by head_ref (for PRs) or ref (for branch pushes) deduplicates overlapping
-# push/PR triggers on the same feature branch and cancels superseded runs immediately,
-# while allowing master branch verification runs to always complete.
+# Grouping by workflow and branch ref cancels superseded runs immediately when rapid
+# commits are pushed to master, saving runner minutes and surfacing the latest status faster.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality-and-tests:
