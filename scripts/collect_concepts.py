@@ -2,16 +2,31 @@
 
 from __future__ import annotations
 
+import argparse
 import re
+import sys
 from collections import defaultdict
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 _CONCEPT_HEADER_RE = re.compile(r"^#\s*CONCEPT:\s*\[([^\]]+)\]\s*(.+)$")
 
 
-def collect_concepts(src_dir: Path, repo_root: Path) -> dict[str, list[tuple[str, str, int, str]]]:
-    """Scans Python files under src_dir and extracts `# CONCEPT:` blocks grouped by category."""
-    grouped: dict[str, list[tuple[str, str, int, str]]] = defaultdict(list)
+@dataclass(frozen=True)
+class ConceptEntry:
+    category: str
+    title: str
+    relative_path: str
+    line_number: int
+    explanation: str
+
+
+def collect_concepts(
+    src_dir: Path,
+    repo_root: Path,
+) -> dict[str, tuple[ConceptEntry, ...]]:
+    grouped: dict[str, list[ConceptEntry]] = defaultdict(list)
 
     for py_file in sorted(src_dir.rglob("*.py")):
         lines = py_file.read_text(encoding="utf-8").splitlines()
@@ -35,14 +50,21 @@ def collect_concepts(src_dir: Path, repo_root: Path) -> dict[str, list[tuple[str
                         idx += 1
                     else:
                         break
-                grouped[category].append((title, rel_path, line_num, " ".join(explanation_lines)))
+                grouped[category].append(
+                    ConceptEntry(
+                        category=category,
+                        title=title,
+                        relative_path=rel_path,
+                        line_number=line_num,
+                        explanation=" ".join(explanation_lines),
+                    )
+                )
             else:
                 idx += 1
-    return grouped
+    return {cat: tuple(entries) for cat, entries in grouped.items()}
 
 
-def render_concepts_markdown(grouped: dict[str, list[tuple[str, str, int, str]]]) -> str:
-    """Renders collected concepts into a structured Markdown reference document."""
+def render_concepts_markdown(grouped: dict[str, tuple[ConceptEntry, ...]]) -> str:
     out = [
         "# Architecture, AI Engineering & Design Patterns Glossary (`# CONCEPT:`)",
         "",
@@ -57,25 +79,63 @@ def render_concepts_markdown(grouped: dict[str, list[tuple[str, str, int, str]]]
     for category in sorted(grouped.keys()):
         out.append(f"## {category}")
         out.append("")
-        for title, rel_path, line_num, explanation in grouped[category]:
-            out.append(f"### {title}")
-            out.append(f"- **Location**: [`{rel_path}:{line_num}`]({rel_path}#L{line_num})")
-            if explanation:
-                out.append(f"- **Why & How**: {explanation}")
+        for entry in grouped[category]:
+            out.append(f"### {entry.title}")
+            out.append(
+                f"- **Location**: [`{entry.relative_path}:{entry.line_number}`]"
+                f"({entry.relative_path}#L{entry.line_number})"
+            )
+            if entry.explanation:
+                out.append(f"- **Why & How**: {entry.explanation}")
             out.append("")
 
     return "\n".join(out).rstrip() + "\n"
 
 
-def main() -> None:
-    repo_root = Path(__file__).resolve().parent.parent
-    src_dir = repo_root / "src"
-    concepts_file = repo_root / "CONCEPTS.md"
+def is_concepts_file_in_sync(concepts_file: Path, expected_markdown: str) -> bool:
+    if not concepts_file.is_file():
+        return False
+    return concepts_file.read_text(encoding="utf-8") == expected_markdown
 
-    grouped = collect_concepts(src_dir=src_dir, repo_root=repo_root)
-    concepts_file.write_text(render_concepts_markdown(grouped), encoding="utf-8")
+
+def run_cli(
+    argv: Sequence[str] | None = None,
+    repo_root: Path | None = None,
+) -> int:
+    parser = argparse.ArgumentParser(description="Collect or verify # CONCEPT: annotations.")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Verify that CONCEPTS.md is up to date without modifying it.",
+    )
+    args = parser.parse_args(argv)
+
+    root = repo_root or Path(__file__).resolve().parent.parent
+    src_dir = root / "src"
+    concepts_file = root / "CONCEPTS.md"
+
+    grouped = collect_concepts(src_dir=src_dir, repo_root=root)
+    expected_markdown = render_concepts_markdown(grouped)
+
+    if args.check:
+        if not is_concepts_file_in_sync(concepts_file, expected_markdown):
+            print(
+                "CONCEPTS.md is out of date. Run 'uv run python scripts/collect_concepts.py' "
+                "to update it.",
+                file=sys.stderr,
+            )
+            return 1
+        print("CONCEPTS.md is up to date.")
+        return 0
+
+    concepts_file.write_text(expected_markdown, encoding="utf-8")
     total = sum(len(items) for items in grouped.values())
     print(f"Collected {total} # CONCEPT: tags across {len(grouped)} categories into CONCEPTS.md.")
+    return 0
+
+
+def main() -> None:
+    raise SystemExit(run_cli())
 
 
 if __name__ == "__main__":
