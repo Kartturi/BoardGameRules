@@ -16,6 +16,7 @@ Each task is defined in a concise markdown file with an **Objective** and **Requ
 9. **[Task 9: Backend HTTP API & Google OAuth Login](task_009_backend_api_and_google_auth.md)**
 10. **[Task 10: React & TypeScript Frontend UI](task_010_react_typescript_frontend.md)**
 11. **[Task 11: Docker & Docker Compose Containerization](task_011_docker_containerization.md)**
+12. **[Task 12: CI/CD Pipelines (GitHub Actions & GCP Cloud Run Deployment)](task_012_ci_cd_github_actions_and_gcp_deployment.md)**
 
 ## Workflow
 When a task is started, the [`task-workflow`](../skills/task-workflow/SKILL.md) and [`pr-review`](../skills/pr-review/SKILL.md) skills run automatically:
