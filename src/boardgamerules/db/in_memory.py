@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+from boardgamerules.domain.contracts import (
+    GameManualRepository,
+    NoSqlRepository,
+    PendingPdfRepository,
+    UserHistoryRepository,
+    UserRepository,
+)
 from boardgamerules.domain.enums import ManualStatus, PendingPdfStatus
 from boardgamerules.domain.exceptions import StorageOperationError
 from boardgamerules.domain.manual import GameManual, PendingPdfManual
@@ -12,7 +19,7 @@ from boardgamerules.domain.user import SavedUserEntry, UserProfile
 # Unlike brittle unittest.mock patches that assert how a database driver was called, an
 # in-memory Fake implements the real repository contract (including uniqueness constraints,
 # sorting, and auto-superseding) so service and API tests run in microseconds without Docker.
-class InMemoryUserRepository:
+class InMemoryUserRepository(UserRepository):
     def __init__(self) -> None:
         self._users: dict[str, UserProfile] = {}
 
@@ -38,7 +45,7 @@ class InMemoryUserRepository:
 # When a new READY manual is saved for a (game_id, edition), any previously READY manual
 # for that same game and edition (such as an earlier Tier-3 AI fallback) is automatically
 # transitioned to SUPERSEDED so queries never return stale unverified rules.
-class InMemoryGameManualRepository:
+class InMemoryGameManualRepository(GameManualRepository):
     def __init__(self) -> None:
         self._manuals: dict[str, GameManual] = {}
 
@@ -100,7 +107,7 @@ class InMemoryGameManualRepository:
         return tuple(ready_manuals)
 
 
-class InMemoryPendingPdfRepository:
+class InMemoryPendingPdfRepository(PendingPdfRepository):
     def __init__(self) -> None:
         self._pending_pdfs: dict[str, PendingPdfManual] = {}
 
@@ -126,7 +133,7 @@ class InMemoryPendingPdfRepository:
         )
 
 
-class InMemoryUserHistoryRepository:
+class InMemoryUserHistoryRepository(UserHistoryRepository):
     def __init__(self) -> None:
         self._entries: dict[str, SavedUserEntry] = {}
 
@@ -144,6 +151,7 @@ class InMemoryNoSqlRepository(
     InMemoryGameManualRepository,
     InMemoryPendingPdfRepository,
     InMemoryUserHistoryRepository,
+    NoSqlRepository,
 ):
     def __init__(self) -> None:
         InMemoryUserRepository.__init__(self)

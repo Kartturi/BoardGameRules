@@ -21,6 +21,13 @@ from boardgamerules.db.mappers import (
     user_from_document,
     user_to_document,
 )
+from boardgamerules.domain.contracts import (
+    GameManualRepository,
+    NoSqlRepository,
+    PendingPdfRepository,
+    UserHistoryRepository,
+    UserRepository,
+)
 from boardgamerules.domain.enums import ManualStatus, PendingPdfStatus
 from boardgamerules.domain.exceptions import DomainValidationError, StorageOperationError
 from boardgamerules.domain.manual import GameManual, PendingPdfManual
@@ -54,7 +61,7 @@ async def _translate_mongo_errors(operation: str) -> AsyncIterator[None]:
         raise StorageOperationError(f"MongoDB operation '{operation}' failed: {exc}") from exc
 
 
-class MongoUserRepository:
+class MongoUserRepository(UserRepository):
     def __init__(self, collection: AsyncCollection[dict[str, Any]]) -> None:
         self._collection = collection
 
@@ -84,7 +91,7 @@ class MongoUserRepository:
         return user_from_document(doc) if doc is not None else None
 
 
-class MongoGameManualRepository:
+class MongoGameManualRepository(GameManualRepository):
     def __init__(self, collection: AsyncCollection[dict[str, Any]]) -> None:
         self._collection = collection
 
@@ -170,7 +177,7 @@ class MongoGameManualRepository:
         return tuple(manual_from_document(doc) for doc in docs)
 
 
-class MongoPendingPdfRepository:
+class MongoPendingPdfRepository(PendingPdfRepository):
     def __init__(self, collection: AsyncCollection[dict[str, Any]]) -> None:
         self._collection = collection
 
@@ -211,7 +218,7 @@ class MongoPendingPdfRepository:
         return pending_pdf_from_document(doc) if doc is not None else None
 
 
-class MongoUserHistoryRepository:
+class MongoUserHistoryRepository(UserHistoryRepository):
     def __init__(self, collection: AsyncCollection[dict[str, Any]]) -> None:
         self._collection = collection
 
@@ -238,7 +245,7 @@ class MongoUserHistoryRepository:
         return tuple(history_entry_from_document(doc) for doc in docs)
 
 
-class MongoNoSqlRepository:
+class MongoNoSqlRepository(NoSqlRepository):
     def __init__(self, database: AsyncDatabase[dict[str, Any]]) -> None:
         self._users = MongoUserRepository(database["users"])
         self._manuals = MongoGameManualRepository(database["game_manuals"])

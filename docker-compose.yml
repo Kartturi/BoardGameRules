@@ -1,0 +1,23 @@
+services:
+  qdrant:
+    image: docker.io/qdrant/qdrant:v1.13.4
+    container_name: boardgamerules-qdrant
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6333:6333" # REST API & Web UI (http://localhost:6333/dashboard)
+      - "127.0.0.1:6334:6334" # gRPC API
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  mongodb:
+    image: docker.io/library/mongo:8.0
+    container_name: boardgamerules-mongodb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  qdrant_storage:
+  mongodb_data:

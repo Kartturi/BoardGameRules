@@ -22,3 +22,14 @@ dist/
 # IDE & Editor configs (keep user specific out)
 .vscode/
 .idea/workspace.xml
+
+# Environment variables & local secrets
+.env
+.env.*
+!.env.example
+
+# Local embedded vector database storage
+.local_qdrant/
+
+# Local rulebook PDF drop folders (keep folder structure via .gitkeep, ignore PDFs)
+data/rulebooks/*/*.pdf

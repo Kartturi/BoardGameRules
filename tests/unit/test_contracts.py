@@ -1,4 +1,4 @@
-"""Unit tests verifying asynchronous Protocol contracts and structural subtyping."""
+"""Unit tests verifying asynchronous ABC contracts and explicit interface inheritance."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from boardgamerules.domain import (
 )
 
 
-class _InMemoryNoSqlStub:
+class _InMemoryNoSqlStub(NoSqlRepository):
     def __init__(self) -> None:
         self.users: dict[str, UserProfile] = {}
         self.manuals: dict[str, GameManual] = {}
@@ -81,7 +81,7 @@ class _InMemoryNoSqlStub:
         return tuple(e for e in self.history if e.user_id == user_id)
 
 
-class _StubRagEngine:
+class _StubRagEngine(RagEngine):
     async def index_chunks(self, chunks: Sequence[RuleChunk]) -> None:
         pass
 
@@ -97,7 +97,7 @@ class _StubRagEngine:
         pass
 
 
-class _StubRulebookFetcher:
+class _StubRulebookFetcher(RulebookFetcher):
     async def fetch_rulebook(self, game_title: str) -> FetchedRulebook:
         return FetchedRulebook(
             game_title=game_title,
@@ -106,7 +106,7 @@ class _StubRulebookFetcher:
         )
 
 
-class _StubAiGenerator:
+class _StubAiGenerator(AiRuleGenerator):
     async def generate_fallback_rules(self, game_title: str) -> str:
         return f"# Rules for {game_title}"
 
@@ -126,7 +126,7 @@ class _StubAiGenerator:
         return "42"
 
 
-class _StubPdfStorage:
+class _StubPdfStorage(PdfStorage):
     async def list_unprocessed_keys(self) -> tuple[str, ...]:
         return ("incoming/catan.pdf",)
 

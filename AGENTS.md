@@ -96,8 +96,8 @@ Whenever a task is mentioned, always activate and follow [`skills/task-workflow/
 4. **Design Mode & Approval**: Present the design and Devil's Advocate critique to the user, resolve trade-offs interactively, and wait for explicit user acceptance before coding.
 5. **Implement & Verify**: Implement tests (`tests/`) and code (`src/boardgamerules/`), then run `uv run pytest` and `uv run ruff check .`.
 6. **AI PR Review ([`skills/pr-review/SKILL.md`](skills/pr-review/SKILL.md))**: Spawn a separate PR Reviewer subagent focusing on **Security** and **Clean Code**, and resolve any findings until approved.
-7. **Human PR Review & Approval**: Present the PR summary and changed files to the user for human review, comments, or adjustments. Wait for explicit user approval.
-8. **Finalize, Rebase & Done**: Once the user approves the PR, move the task file into `tasks/done/`, commit, and rebase/merge onto `master`.
+7. **Human PR Review & Approval**: Present the PR summary and changed files to the user for human review, comments, or adjustments. Wait until the user explicitly types **`pr approved`** (never interpret general replies like `"ok"`, `"proceed"`, `"is fine"`, or `"yes"` during intermediate change discussions as PR approval).
+8. **Finalize, Rebase & Done**: Only after the user explicitly types **`pr approved`**, move the task file into `tasks/done/`, commit, and rebase/merge onto `master`.
 
 ---
 

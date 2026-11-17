@@ -40,13 +40,13 @@ Once the AI `pr-reviewer` subagent approves:
    - Clickable links to all created/modified files and key symbols.
    - Summary of what the AI PR Reviewer caught and fixed.
    - Any `# CONCEPT:` highlights added in this task.
-2. **STOP and wait for the user's Human PR Review**:
+2. **STOP and wait for the user's Human PR Review (`pr approved`)**:
    - Do **NOT** move the task to `tasks/done/`, commit, or rebase onto `master` yet.
    - Invite the user to inspect the code, ask questions, comment, or request changes.
-   - If the user requests changes or asks questions, address them and wait until the user explicitly approves the PR.
+   - **Strict Approval Trigger**: Only treat the PR as approved when the user explicitly types **`pr approved`**. Never treat general acknowledgments (`"proceed"`, `"is fine"`, `"ok"`, `"yes"`) to intermediate questions or code tweaks as final PR approval.
 
 ## Step 4: Finalize — Move Task to `tasks/done/` & Rebase onto `master`
-Only after the user explicitly approves the Human PR Review:
+Only after the user explicitly types **`pr approved`**:
 1. Move the completed task markdown file into `tasks/done/`:
    ```bash
    mkdir -p tasks/done

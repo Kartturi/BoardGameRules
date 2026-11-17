@@ -106,13 +106,13 @@ Once the user accepts the design:
 
 1. **Present PR for Human Review**:
    Once the AI `pr-reviewer` approves, present the completed changes, AI review takeaways, and clickable links to all modified files to the user.
-2. **STOP and Wait for Human Approval**:
-   Do **NOT** move the task file to `tasks/done/`, commit, or rebase onto `master` until the user has reviewed the changes, had any questions or change requests resolved, and explicitly approved the PR.
+2. **STOP and Wait for Explicit `pr approved`**:
+   Do **NOT** move the task file to `tasks/done/`, commit, or rebase onto `master` until the user has reviewed the changes, had any questions or change requests resolved, and explicitly typed the phrase **`pr approved`**. Never treat general replies (`"proceed"`, `"is fine"`, `"ok"`, `"yes"`) during review discussions as final PR approval.
 
 ---
 
 ## Step 8: Finalize — Move to `tasks/done/` & Rebase onto `master`
 
-Once the user explicitly approves the Human PR Review:
+Only after the user explicitly types **`pr approved`**:
 1. Move `tasks/task_<number>_<short_slug>.md` into `tasks/done/` and update `tasks/README.md`.
 2. Commit the changes on the feature branch, rebase onto `master`, and fast-forward merge into `master`.
