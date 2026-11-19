@@ -8,7 +8,7 @@ description: >-
   to grill the design, conducts an interactive design review with the user until
   accepted, implements the solution, runs an AI Security & Clean Code PR Reviewer
   subagent, presents the PR to the user for Human PR Review, and only after user
-  approval moves the task into `tasks/done/` and rebases onto `master`.
+  approval moves the task into `tasks/done/`, rebases onto `master`, and pushes `master` to GitHub.
 ---
 
 # Task Workflow (Branch -> Design -> Devil's Advocate -> Design Mode -> Implement -> AI PR Review -> Human PR Review -> Rebase & Done)
@@ -111,8 +111,8 @@ Once the user accepts the design:
 
 ---
 
-## Step 8: Finalize — Move to `tasks/done/` & Rebase onto `master`
+## Step 8: Finalize — Move to `tasks/done/`, Rebase onto `master`, & Push to GitHub
 
 Only after the user explicitly types **`pr approved`**:
 1. Move `tasks/task_<number>_<short_slug>.md` into `tasks/done/` and update `tasks/README.md`.
-2. Commit the changes on the feature branch, rebase onto `master`, and fast-forward merge into `master`.
+2. Commit the changes on the feature branch, rebase onto `master`, fast-forward merge into `master`, delete the feature branch, and push `master` to GitHub (`git push origin master`).

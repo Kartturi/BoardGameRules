@@ -5,7 +5,7 @@ description: >-
   focused on Security and Clean Code (AGENTS.md) and fixes any issues it finds;
   (2) Presents the changes to the user for Human PR Review (comments, questions,
   or change requests). Only after explicit human approval does it move the active
-  task file into `tasks/done/`, commit, and rebase/merge onto `master`.
+  task file into `tasks/done/`, commit, rebase/merge onto `master`, and push `master` to GitHub.
 ---
 
 # Two-Stage PR Review (AI Reviewer -> Human Review -> Rebase & Archive)
@@ -45,7 +45,7 @@ Once the AI `pr-reviewer` subagent approves:
    - Invite the user to inspect the code, ask questions, comment, or request changes.
    - **Strict Approval Trigger**: Only treat the PR as approved when the user explicitly types **`pr approved`**. Never treat general acknowledgments (`"proceed"`, `"is fine"`, `"ok"`, `"yes"`) to intermediate questions or code tweaks as final PR approval.
 
-## Step 4: Finalize — Move Task to `tasks/done/` & Rebase onto `master`
+## Step 4: Finalize — Move Task to `tasks/done/`, Rebase onto `master`, & Push to GitHub
 Only after the user explicitly types **`pr approved`**:
 1. Move the completed task markdown file into `tasks/done/`:
    ```bash
@@ -53,11 +53,13 @@ Only after the user explicitly types **`pr approved`**:
    git mv tasks/task_<number>_<short_slug>.md tasks/done/task_<number>_<short_slug>.md
    ```
 2. Update `tasks/README.md` to list the task under `Completed Tasks`.
-3. Commit, rebase onto `master`, and fast-forward `master`:
+3. Commit, rebase onto `master`, fast-forward `master`, delete the feature branch, and push `master` to GitHub:
    ```bash
    git add -A
    git commit -m "feat(task-<number>): <summary>"
    git rebase master
    git checkout master
    git merge --ff-only feat/task-<number>-<short-slug>
+   git branch -d feat/task-<number>-<short-slug>
+   git push origin master
    ```
