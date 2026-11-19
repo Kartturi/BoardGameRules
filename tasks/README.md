@@ -7,10 +7,10 @@ Each task is defined in a concise markdown file with an **Objective** and **Requ
 2. **[Task 2: Domain Models & Module Contracts](done/task_002_domain_models_and_module_contracts.md)**
 3. **[Task 3: NoSQL Database & Repositories](done/task_003_nosql_database_repositories.md)**
 4. **[Task 4: RAG Engine & Vector Store Module](done/task_004_rag_engine_and_vector_store.md)**
-5. **[Task 12: GitHub Actions CI Pipeline](done/task_012_github_actions_ci_pipeline.md)**
+5. **[Task 5: Batch PDF Ingestion Job](done/task_005_pdf_batch_ingestion_job.md)**
+6. **[Task 12: GitHub Actions CI Pipeline](done/task_012_github_actions_ci_pipeline.md)**
 
 ## Task Backlog
-5. **[Task 5: Batch PDF Ingestion Job](task_005_pdf_batch_ingestion_job.md)**
 6. **[Task 6: Internet API Rulebook Fetcher Module](task_006_internet_rulebook_fetcher.md)**
 7. **[Task 7: AI Fallback & Quick Recap Generator Module](task_007_ai_fallback_and_recap_generator.md)**
 8. **[Task 8: Rule Orchestrator ("Organisation Body")](task_008_rule_orchestrator_service.md)**

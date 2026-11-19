@@ -27,7 +27,7 @@ wheels = [
 [[package]]
 name = "boardgamerules"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "google-genai" },
     { name = "pymongo" },

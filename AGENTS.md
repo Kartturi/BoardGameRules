@@ -52,7 +52,8 @@ The primary goal is **high human readability and maintainability**. Code is read
 - Categories to highlight:
   - `[AI Engineering]` (e.g., RAG chunking, vector embeddings, grounded generation, fallback pipelines, citation attribution)
   - `[System Design]` (e.g., stateless compute, blob storage abstraction, idempotency, eventual consistency)
-  - `[Design Pattern]` (e.g., Repository, Strategy, Facade, Protocol/Structural Subtyping, Value Object, Immutable State Transition)
+  - `[Design Pattern]` (e.g., Repository, Gateway, Strategy, Facade, Value Object, Immutable State Transition)
+- **Write explanations in plain, everyday English**: Name the real engineering concept or pattern accurately, then explain *what it means* and *why it helps here* in simple, beginner-friendly sentences. Avoid piling on extra jargon (like "idempotent", "ephemeral", or "artifacts") without explaining it in plain words.
 - These `# CONCEPT:` tags are also indexed in `CONCEPTS.md` so they can be browsed in one place.
 
 ---
