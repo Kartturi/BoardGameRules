@@ -18,8 +18,8 @@ _ALL_CAPS_HEADING_PATTERN = re.compile(r"^[A-Z][A-Z0-9\s,&:'/-]{2,60}$")
 
 @dataclass(frozen=True)
 class ChunkingConfig:
-    max_chunk_chars: int = 800
-    overlap_chars: int = 150
+    max_chunk_chars: int = 1600
+    overlap_chars: int = 200
     default_section_title: str = "General Rules"
 
     def __post_init__(self) -> None:

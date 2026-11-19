@@ -15,7 +15,8 @@ The primary goal is **high human readability and maintainability**. Code is read
 - **Verbs for actions, nouns for entities**:
   - Functions/methods are actions: `advance_turn()`, `draw_card()`, `is_game_over()`
   - Classes and variables are nouns: `TurnTracker`, `GameBoard`, `winning_score`
-- **Avoid cryptic abbreviations**: Favor clarity over saving a few keystrokes.
+- **Avoid cryptic abbreviations & academic jargon**: Favor plain, everyday words over saving keystrokes or using heavy jargon (e.g., `_list_pdf_keys_to_process()` instead of `_discover_candidate_keys()`, `dependencies` instead of `deps`).
+- **No `_and_` in function names**: If a function name needs `_and_` (like `_extract_index_and_register_manual`), it is doing too many things—split each step into its own single-purpose function.
 
 ### 1.2 Small, Focused Functions (Single Responsibility)
 - Each function should do **one thing well**.

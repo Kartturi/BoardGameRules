@@ -78,18 +78,59 @@ def test_should_batch_document_embeddings_and_use_asymmetric_task_types_in_gemin
     assert len(query_vector) == 2
     assert len(fake_client.aio_models.calls) == 3
     assert fake_client.aio_models.calls[0][1] == ["Chunk 1", "Chunk 2"]
-    assert fake_client.aio_models.calls[0][2] == {"task_type": "RETRIEVAL_DOCUMENT"}
+    assert fake_client.aio_models.calls[0][2] == {
+        "task_type": "RETRIEVAL_DOCUMENT",
+        "output_dimensionality": 768,
+    }
     assert fake_client.aio_models.calls[1][1] == ["Chunk 3"]
     assert fake_client.aio_models.calls[2][1] == ["How do I win?"]
-    assert fake_client.aio_models.calls[2][2] == {"task_type": "RETRIEVAL_QUERY"}
+    assert fake_client.aio_models.calls[2][2] == {
+        "task_type": "RETRIEVAL_QUERY",
+        "output_dimensionality": 768,
+    }
 
 
 def test_should_translate_gemini_provider_errors_into_rag_ingestion_error() -> None:
     fake_client = _FakeGenAiClient(should_fail=True)
-    provider = GeminiEmbeddingProvider(client=fake_client)
+    provider = GeminiEmbeddingProvider(client=fake_client, max_retries=0)
 
     with pytest.raises(RagIngestionError, match="Failed to generate embeddings"):
         asyncio.run(provider.embed_query("How many cards?"))
+
+
+def test_should_retry_automatically_on_429_resource_exhausted_in_gemini_provider() -> None:
+    # Arrange
+    attempts = 0
+
+    class _RateLimitedAioModels(_FakeAioModels):
+        async def embed_content(
+            self,
+            *,
+            model: str,
+            contents: Sequence[str],
+            config: dict[str, Any] | None = None,
+        ) -> _FakeEmbedResponse:
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise RuntimeError("429 RESOURCE_EXHAUSTED. Please retry in 0.01s.")
+            return await super().embed_content(model=model, contents=contents, config=config)
+
+    fake_client = _FakeGenAiClient()
+    fake_client.aio_models = _RateLimitedAioModels()
+    fake_client.aio = _FakeAioNamespace(fake_client.aio_models)
+    provider = GeminiEmbeddingProvider(
+        client=fake_client,
+        max_retries=2,
+        base_retry_seconds=0.0,
+    )
+
+    # Act
+    vector = asyncio.run(provider.embed_query("How do I win?"))
+
+    # Assert
+    assert attempts == 2
+    assert len(vector) == 2
 
 
 def test_should_produce_normalized_deterministic_vectors_in_test_embedding_provider() -> None:

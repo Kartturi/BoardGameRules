@@ -10,9 +10,11 @@ services:
       - qdrant_storage:/qdrant/storage
 
   mongodb:
-    image: docker.io/library/mongo:8.0
+    image: docker.io/library/mongo:8.0.4
     container_name: boardgamerules-mongodb
     restart: unless-stopped
+    environment:
+      - GLIBC_TUNABLES=glibc.pthread.rseq=0
     ports:
       - "127.0.0.1:27017:27017"
     volumes:

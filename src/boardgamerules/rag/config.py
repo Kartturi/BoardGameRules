@@ -1,4 +1,4 @@
-"""Environment-driven configuration and client factory for the RAG engine."""
+"""Environment-driven configuration and client factories for RAG and persistence."""
 
 from __future__ import annotations
 
@@ -7,13 +7,20 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from google import genai
 from qdrant_client import AsyncQdrantClient
 
 from boardgamerules.domain.exceptions import DomainValidationError
 from boardgamerules.domain.validators import require_non_blank
+from boardgamerules.rag.embeddings import (
+    DeterministicEmbeddingProvider,
+    EmbeddingProvider,
+    GeminiEmbeddingProvider,
+)
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
 _IN_MEMORY_QDRANT_URL = ":memory:"
-_DEFAULT_DOTENV_PATH = Path(".env")
+_DEFAULT_DOTENV_PATH = _PROJECT_ROOT / ".env"
 
 
 # CONCEPT: [System Design] Twelve-Factor Externalized Configuration & Fail-Fast Startup
@@ -28,6 +35,8 @@ class RagSettings:
     gemini_embedding_model: str
     gemini_api_key: str | None = field(default=None, repr=False)
     qdrant_api_key: str | None = field(default=None, repr=False)
+    mongodb_uri: str | None = field(default=None, repr=False)
+    mongodb_database: str | None = None
 
     def __post_init__(self) -> None:
         require_non_blank(self.qdrant_url, "qdrant_url")
@@ -50,6 +59,8 @@ class RagSettings:
             gemini_embedding_model=_read_required(env, "GEMINI_EMBEDDING_MODEL"),
             gemini_api_key=_read_optional(env, "GEMINI_API_KEY"),
             qdrant_api_key=_read_optional(env, "QDRANT_API_KEY"),
+            mongodb_uri=_read_optional(env, "MONGODB_URI"),
+            mongodb_database=_read_optional(env, "MONGODB_DATABASE"),
         )
 
 
@@ -61,6 +72,17 @@ def create_qdrant_client_from_settings(settings: RagSettings) -> AsyncQdrantClie
         api_key=settings.qdrant_api_key,
         check_compatibility=False,
     )
+
+
+def create_embedding_provider_from_settings(settings: RagSettings) -> EmbeddingProvider:
+    if settings.gemini_api_key:
+        genai_client = genai.Client(api_key=settings.gemini_api_key)
+        return GeminiEmbeddingProvider(
+            client=genai_client,
+            model=settings.gemini_embedding_model,
+            output_dimensionality=settings.qdrant_vector_size,
+        )
+    return DeterministicEmbeddingProvider(vector_size=settings.qdrant_vector_size)
 
 
 def _load_env_vars(

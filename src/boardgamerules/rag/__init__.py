@@ -1,7 +1,11 @@
 """RAG Engine & Vector Store module for board game rulebook ingestion and retrieval."""
 
 from boardgamerules.rag.chunker import ChunkingConfig, chunk_rulebook_pages
-from boardgamerules.rag.config import RagSettings, create_qdrant_client_from_settings
+from boardgamerules.rag.config import (
+    RagSettings,
+    create_embedding_provider_from_settings,
+    create_qdrant_client_from_settings,
+)
 from boardgamerules.rag.embeddings import (
     DeterministicEmbeddingProvider,
     EmbeddingProvider,
@@ -28,5 +32,6 @@ __all__ = [
     "RulebookQuestion",
     "answer_rulebook_question",
     "chunk_rulebook_pages",
+    "create_embedding_provider_from_settings",
     "create_qdrant_client_from_settings",
 ]

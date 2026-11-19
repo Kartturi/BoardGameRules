@@ -7,7 +7,13 @@ from pathlib import Path
 import pytest
 
 from boardgamerules.domain import DomainValidationError
-from boardgamerules.rag import RagSettings, create_qdrant_client_from_settings
+from boardgamerules.rag import (
+    DeterministicEmbeddingProvider,
+    GeminiEmbeddingProvider,
+    RagSettings,
+    create_embedding_provider_from_settings,
+    create_qdrant_client_from_settings,
+)
 
 _VALID_ENV = {
     "QDRANT_URL": ":memory:",
@@ -110,3 +116,26 @@ async def test_should_create_in_memory_qdrant_client_when_qdrant_url_is_memory()
     # Assert
     assert await client.collection_exists(settings.qdrant_collection_name) is False
     await client.close()
+
+
+def test_should_select_gemini_or_deterministic_embedder_based_on_api_key() -> None:
+    # Arrange
+    no_key_settings = RagSettings.from_env(_VALID_ENV)
+    blank_key_settings = RagSettings.from_env({**_VALID_ENV, "GEMINI_API_KEY": "   "})
+    real_key_settings = RagSettings.from_env(
+        {**_VALID_ENV, "GEMINI_API_KEY": "AIzaSyRealKeyExample123"}
+    )
+
+    # Act / Assert
+    assert isinstance(
+        create_embedding_provider_from_settings(no_key_settings),
+        DeterministicEmbeddingProvider,
+    )
+    assert isinstance(
+        create_embedding_provider_from_settings(blank_key_settings),
+        DeterministicEmbeddingProvider,
+    )
+    assert isinstance(
+        create_embedding_provider_from_settings(real_key_settings),
+        GeminiEmbeddingProvider,
+    )
