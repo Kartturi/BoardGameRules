@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import math
 import re
 from abc import ABC, abstractmethod
@@ -21,6 +22,7 @@ _DEFAULT_MAX_RETRIES = 4
 _DEFAULT_BASE_RETRY_SECONDS = 25.0
 _RETRY_DELAY_PATTERN = re.compile(r"retry in (\d+(?:\.\d+)?)s", re.IGNORECASE)
 _WORD_TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
+logger = logging.getLogger(__name__)
 
 
 # CONCEPT: [AI Engineering] Vector Embeddings (Translating Text Meaning into Coordinates)
@@ -97,6 +99,14 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
     ) -> list[tuple[float, ...]]:
         for attempt in range(self._max_retries + 1):
             try:
+                logger.debug(
+                    "Requesting Gemini embeddings batch",
+                    extra={
+                        "model": self._model,
+                        "task_type": task_type,
+                        "batch_size": len(texts),
+                    },
+                )
                 response = await self._client.aio.models.embed_content(
                     model=self._model,
                     contents=texts,
@@ -109,6 +119,14 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
             except Exception as exc:
                 if _is_rate_limit_error(exc) and attempt < self._max_retries:
                     wait_seconds = _parse_retry_delay_seconds(str(exc), self._base_retry_seconds)
+                    logger.warning(
+                        "Gemini embedding rate limit hit; retrying after backoff",
+                        extra={
+                            "model": self._model,
+                            "attempt": attempt + 1,
+                            "wait_seconds": wait_seconds,
+                        },
+                    )
                     await asyncio.sleep(wait_seconds)
                     continue
                 raise RagIngestionError(

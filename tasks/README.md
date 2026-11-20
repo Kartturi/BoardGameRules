@@ -9,6 +9,7 @@ Each task is defined in a concise markdown file with an **Objective** and **Requ
 4. **[Task 4: RAG Engine & Vector Store Module](done/task_004_rag_engine_and_vector_store.md)**
 5. **[Task 5: Batch PDF Ingestion Job](done/task_005_pdf_batch_ingestion_job.md)**
 6. **[Task 12: GitHub Actions CI Pipeline](done/task_012_github_actions_ci_pipeline.md)**
+7. **[Task 14: Centralized Structured Logging](done/task_014_centralized_logging.md)**
 
 ## Task Backlog
 6. **[Task 6: Internet API Rulebook Fetcher Module](task_006_internet_rulebook_fetcher.md)**

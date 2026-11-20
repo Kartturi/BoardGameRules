@@ -7,6 +7,7 @@ import asyncio
 from collections.abc import Sequence
 
 from boardgamerules.domain import normalize_game_id
+from boardgamerules.logging_config import configure_logging
 from boardgamerules.rag import (
     QdrantRagEngine,
     RagSettings,
@@ -76,6 +77,7 @@ async def run_query_demo(game_id_or_title: str, question: str, top_k: int) -> No
 
 
 def main(argv: Sequence[str] | None = None) -> None:
+    configure_logging()
     args = parse_args(argv)
     asyncio.run(
         run_query_demo(

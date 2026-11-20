@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -20,6 +21,8 @@ from boardgamerules.batch.storage import LocalPdfStorage
 from boardgamerules.db.in_memory import InMemoryNoSqlRepository
 from boardgamerules.db.mongo import MongoNoSqlRepository
 from boardgamerules.domain.contracts import NoSqlRepository
+from boardgamerules.env_loader import PROJECT_ROOT
+from boardgamerules.logging_config import configure_logging
 from boardgamerules.rag.config import (
     RagSettings,
     create_embedding_provider_from_settings,
@@ -27,8 +30,8 @@ from boardgamerules.rag.config import (
 )
 from boardgamerules.rag.qdrant_engine import QdrantRagEngine
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_DEFAULT_RULEBOOKS_DIR = _PROJECT_ROOT / "data" / "rulebooks"
+_DEFAULT_RULEBOOKS_DIR = PROJECT_ROOT / "data" / "rulebooks"
+logger = logging.getLogger(__name__)
 
 
 def parse_batch_cli_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -95,9 +98,14 @@ def _create_ingestor(
 @asynccontextmanager
 async def open_database(settings: RagSettings) -> AsyncIterator[NoSqlRepository]:
     if not settings.mongodb_uri or not settings.mongodb_database:
+        logger.info("Using in-memory NoSQL repository (MONGODB_URI not configured)")
         yield InMemoryNoSqlRepository()
         return
 
+    logger.info(
+        "Connecting to MongoDB repository",
+        extra={"mongodb_database": settings.mongodb_database},
+    )
     mongo_client: AsyncMongoClient[dict[str, object]] = AsyncMongoClient(
         settings.mongodb_uri,
         serverSelectionTimeoutMS=3000,
@@ -114,23 +122,31 @@ async def run_batch_worker(
     base_dir: Path,
     poll_interval: float,
 ) -> BatchIngestionResult:
+    logger.info(
+        "Starting PDF batch worker",
+        extra={"base_dir": str(base_dir), "poll_interval_seconds": poll_interval},
+    )
     while True:
         result = await run_batch_once(base_dir=base_dir)
-        _print_batch_result(result)
+        _log_batch_result(result)
         if poll_interval <= 0.0:
             return result
         await asyncio.sleep(poll_interval)
 
 
-def _print_batch_result(result: BatchIngestionResult) -> None:
-    print(
-        f"Batch ingestion pass: processed={len(result.processed_keys)}, "
-        f"duplicates_skipped={len(result.skipped_duplicate_keys)}, "
-        f"failed={len(result.failed_keys)}"
+def _log_batch_result(result: BatchIngestionResult) -> None:
+    logger.info(
+        "Batch ingestion pass completed",
+        extra={
+            "processed_count": len(result.processed_keys),
+            "duplicates_skipped_count": len(result.skipped_duplicate_keys),
+            "failed_count": len(result.failed_keys),
+        },
     )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    configure_logging()
     args = parse_batch_cli_args(argv)
     asyncio.run(run_batch_worker(base_dir=args.base_dir, poll_interval=args.poll_interval))
     return 0

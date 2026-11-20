@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -12,6 +13,7 @@ from boardgamerules.domain.validators import require_non_blank
 
 _DEFAULT_MAX_PDF_BYTES = 50 * 1024 * 1024
 _DEFAULT_MAX_PAGES = 500
+logger = logging.getLogger(__name__)
 
 
 # CONCEPT: [AI Engineering] Page-Preserving PDF Extraction for Grounded Citations
@@ -58,6 +60,7 @@ class PyMuPdfTextExtractor(PdfTextExtractor):
 
         if not pages:
             raise RagIngestionError("PDF contains no extractable text across any pages.")
+        logger.debug("Extracted text pages from PDF", extra={"page_count": len(pages)})
         return pages
 
     def _validate_pdf_size(self, pdf_bytes: bytes) -> None:

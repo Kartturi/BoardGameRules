@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -32,6 +33,8 @@ from boardgamerules.domain.enums import ManualStatus, PendingPdfStatus
 from boardgamerules.domain.exceptions import DomainValidationError, StorageOperationError
 from boardgamerules.domain.manual import GameManual, PendingPdfManual
 from boardgamerules.domain.user import SavedUserEntry, UserProfile
+
+logger = logging.getLogger(__name__)
 
 
 # CONCEPT: [System Design] NoSQL Operator Injection Prevention
@@ -257,6 +260,7 @@ class MongoNoSqlRepository(NoSqlRepository):
         await self._manuals.ensure_indexes()
         await self._pending_pdfs.ensure_indexes()
         await self._history.ensure_indexes()
+        logger.info("Ensured MongoDB indexes across all collections")
 
     async def save_user(self, user: UserProfile) -> None:
         await self._users.save_user(user)

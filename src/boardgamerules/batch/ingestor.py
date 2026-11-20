@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
@@ -23,6 +24,7 @@ from boardgamerules.rag.pdf_extractor import PdfTextExtractor, PyMuPdfTextExtrac
 
 _DEFAULT_EXTRACTOR = PyMuPdfTextExtractor()
 _DEFAULT_CHUNKING_CONFIG = ChunkingConfig()
+logger = logging.getLogger(__name__)
 
 
 # CONCEPT: [Design Pattern] Gateway & Repository (Injected Interfaces)
@@ -71,6 +73,10 @@ class PdfBatchIngestor:
 
     async def run_once(self) -> BatchIngestionResult:
         incoming_keys = await self._storage.list_unprocessed_keys()
+        logger.info(
+            "Scanned incoming PDF directory",
+            extra={"incoming_count": len(incoming_keys)},
+        )
         tracker = _BatchRunTracker()
 
         for file_key in incoming_keys:
@@ -79,6 +85,7 @@ class PdfBatchIngestor:
         return tracker.to_result()
 
     async def _process_pdf(self, file_key: str, tracker: _BatchRunTracker) -> None:
+        logger.info("Processing PDF manual", extra={"file_key": file_key})
         pending = await self._get_or_create_pending_pdf(file_key)
         processing_pdf = pending.mark_processing()
         await self._pending_repo.save_pending_pdf(processing_pdf)
@@ -86,6 +93,10 @@ class PdfBatchIngestor:
         try:
             was_duplicate = await self._ingest_pdf(processing_pdf)
         except Exception as exc:
+            logger.exception(
+                "PDF ingestion failed; moving file to failed directory",
+                extra={"file_key": file_key, "error_type": type(exc).__name__},
+            )
             await self._mark_pdf_failed(processing_pdf, str(exc), tracker)
             return
 
@@ -112,6 +123,10 @@ class PdfBatchIngestor:
         pending_with_hash = replace(pending, content_sha256=content_sha256)
 
         if await self._is_already_indexed(content_sha256):
+            logger.info(
+                "Skipping duplicate PDF manual already indexed",
+                extra={"file_key": pending.file_key, "game_id": game_id},
+            )
             await self._mark_pdf_completed(pending_with_hash)
             return True
 
@@ -119,6 +134,14 @@ class PdfBatchIngestor:
         await self._replace_chunks_in_qdrant(game_id, chunks)
         await self._save_ready_manual(pending_with_hash, game_id)
         await self._mark_pdf_completed(pending_with_hash)
+        logger.info(
+            "Indexed PDF manual into Qdrant",
+            extra={
+                "file_key": pending.file_key,
+                "game_id": game_id,
+                "chunk_count": len(chunks),
+            },
+        )
         return False
 
     async def _is_already_indexed(self, content_sha256: str) -> bool:

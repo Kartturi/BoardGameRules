@@ -30,6 +30,7 @@ uv run ruff check .
      - Small, single-responsibility functions with lean signatures (1–3 args)
      - Strict Command-Query Separation (CQS) and immutability (`@dataclass(frozen=True)`)
      - Domain-specific exceptions instead of silent `None`/`False` returns
+     - Centralized logging compliance (`logging.getLogger(__name__)` with `extra={...}` in I/O/service modules, no `print()` for operational logs, no logging in pure `domain/`, log errors once at the boundary, never log secrets/PII)
      - Educational `# CONCEPT:` tags synchronized with `CONCEPTS.md`
      - Fast, isolated AAA unit tests with `test_should_<expected>_when_<condition>` naming
 3. If the subagent returns `Verdict: CHANGES_REQUESTED`: fix every reported issue, re-run `uv run pytest` and `uv run ruff check .`, and re-verify with the `pr-reviewer` subagent via `send_message` until it returns `Verdict: APPROVED`.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 
 from boardgamerules.domain.contracts import PdfStorage
@@ -12,6 +13,7 @@ from boardgamerules.domain.validators import validate_safe_file_key
 _INCOMING_DIR_NAME = "incoming"
 _PROCESSED_DIR_NAME = "processed"
 _FAILED_DIR_NAME = "failed"
+logger = logging.getLogger(__name__)
 
 
 # CONCEPT: [System Design] Moving Files by Status (incoming/ -> processed/ or failed/)
@@ -43,6 +45,10 @@ class LocalPdfStorage(PdfStorage):
         source_path = self._resolve_safe_path(file_key)
         destination = target_dir / source_path.name
         await asyncio.to_thread(self._move_file, source_path, destination)
+        logger.debug(
+            "Moved PDF file",
+            extra={"file_key": file_key, "destination_folder": target_dir.name},
+        )
 
     def _create_folders(self) -> None:
         try:

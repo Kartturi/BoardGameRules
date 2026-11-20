@@ -56,6 +56,14 @@ The primary goal is **high human readability and maintainability**. Code is read
 - **Write explanations in plain, everyday English**: Name the real engineering concept or pattern accurately, then explain *what it means* and *why it helps here* in simple, beginner-friendly sentences. Avoid piling on extra jargon (like "idempotent", "ephemeral", or "artifacts") without explaining it in plain words.
 - These `# CONCEPT:` tags are also indexed in `CONCEPTS.md` so they can be browsed in one place.
 
+### 1.8 Centralized Logging Standard
+- Every I/O, service, database, RAG, batch, or HTTP module MUST use Python's standard module logger (`logger = logging.getLogger(__name__)`) configured centrally via `boardgamerules.logging_config.configure_logging()`.
+- Call `configure_logging()` **only** at process entry points (`main()`, CLI, or FastAPI app startup) — never at module import time or inside library helpers.
+- Do **not** use `print()` for operational logs, and do **not** add logging inside pure `domain/` models or validators.
+- Attach structured context using `extra={...}` (e.g., `game_id`, `file_key`, `chunk_count`) so logs are searchable in GCP Cloud Logging (`LOG_FORMAT=json`).
+- **Log errors once at the boundary**: low-level adapters log normal activity at `DEBUG` (and `WARNING` only when recovering, such as retries); boundaries that catch/handle failures log `ERROR`/`exception` once.
+- **Never log secrets or raw PII**: never log API keys, passwords, tokens, connection strings with credentials, emails, `google_sub`, or full user queries/rulebook text (log safe metadata like `question_length` or `chunk_count`).
+
 ---
 
 ## 2. Test-Always Philosophy

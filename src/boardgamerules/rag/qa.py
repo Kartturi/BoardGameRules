@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 from boardgamerules.domain.contracts import AiRuleGenerator, RagEngine
@@ -9,6 +10,8 @@ from boardgamerules.domain.enums import ManualSource
 from boardgamerules.domain.exceptions import DomainValidationError, ManualNotFoundError
 from boardgamerules.domain.rag import RuleAnswer
 from boardgamerules.domain.validators import require_canonical_game_id, require_non_blank
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -44,7 +47,20 @@ async def answer_rulebook_question(
         top_k=query.top_k,
     )
     if not retrieved_chunks:
+        logger.info(
+            "No indexed chunks found for game",
+            extra={"game_id": query.game_id, "top_k": query.top_k},
+        )
         raise ManualNotFoundError(query.game_id)
+
+    logger.info(
+        "Retrieved grounded rulebook chunks",
+        extra={
+            "game_id": query.game_id,
+            "chunk_count": len(retrieved_chunks),
+            "question_length": len(query.question),
+        },
+    )
 
     answer_markdown = await ai_generator.answer_question(
         game_title=query.game_title,

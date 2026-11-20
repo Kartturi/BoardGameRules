@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 import warnings
 from collections.abc import Sequence
@@ -32,6 +33,7 @@ from boardgamerules.rag.embeddings import EmbeddingProvider
 _QDRANT_POINT_NAMESPACE = uuid.UUID("9f8d5a2b-3c4e-4f1a-8b9c-0d1e2f3a4b5c")
 _DEFAULT_COLLECTION_NAME = "rule_chunks"
 _DEFAULT_VECTOR_SIZE = 768
+logger = logging.getLogger(__name__)
 
 
 # CONCEPT: [System Design] Embedded In-Memory Database Engine vs. Hand-Rolled Fake
@@ -66,6 +68,13 @@ class QdrantRagEngine(RagEngine):
         try:
             exists = await self._client.collection_exists(self._collection_name)
             if not exists:
+                logger.info(
+                    "Creating Qdrant collection",
+                    extra={
+                        "collection_name": self._collection_name,
+                        "vector_size": self._vector_size,
+                    },
+                )
                 await self._client.create_collection(
                     collection_name=self._collection_name,
                     vectors_config=VectorParams(
@@ -107,6 +116,13 @@ class QdrantRagEngine(RagEngine):
                 collection_name=self._collection_name,
                 points=points,
                 wait=True,
+            )
+            logger.debug(
+                "Upserted rulebook chunks into Qdrant",
+                extra={
+                    "collection_name": self._collection_name,
+                    "chunk_count": len(points),
+                },
             )
         except Exception as exc:
             raise RagIngestionError(f"Qdrant indexing failed: {exc}") from exc
