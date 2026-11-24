@@ -1,19 +1,20 @@
 ---
 name: task-workflow
 description: >-
-  End-to-end task design, implementation, and two-stage PR review workflow.
+  End-to-end task design, implementation, and three-stage PR review workflow.
   Activate this skill whenever the user mentions, defines, or asks to work on a
   task (e.g., "Task 2: ...", or references a file in `tasks/`). Creates a
   dedicated git branch, drafts a design plan, spawns a Devil's Advocate subagent
   to grill the design, conducts an interactive design review with the user until
   accepted, implements the solution, runs an AI Security & Clean Code PR Reviewer
-  subagent, presents the PR to the user for Human PR Review, and only after user
-  approval moves the task into `tasks/done/`, rebases onto `master`, and pushes `master` to GitHub.
+  subagent, presents the PR to the user for Human PR Review, runs a post-approval
+  final AI PR Review upon `pr approved`, and only after both approvals moves the
+  task into `tasks/done/`, rebases onto `master`, and pushes `master` to GitHub.
 ---
 
-# Task Workflow (Branch -> Design -> Devil's Advocate -> Design Mode -> Implement -> AI PR Review -> Human PR Review -> Rebase & Done)
+# Task Workflow (Branch -> Design -> Devil's Advocate -> Design Mode -> Implement -> AI PR Review -> Human PR Review -> Post-Approval AI PR Review -> Rebase & Done)
 
-Follow these steps strictly in order whenever a task is mentioned or started. Do **not** skip ahead to implementation before the user accepts the design, and do **not** rebase/complete the task before the user approves the Human PR Review.
+Follow these steps strictly in order whenever a task is mentioned or started. Do **not** skip ahead to implementation before the user accepts the design, and do **not** rebase/complete the task before the user approves the Human PR Review and the post-approval review passes.
 
 ---
 
@@ -105,14 +106,28 @@ Once the user accepts the design:
 ## Step 7: Stage 2 — Human PR Review (Wait for User Approval)
 
 1. **Present PR for Human Review**:
-   Once the AI `pr-reviewer` approves, present the completed changes, AI review takeaways, and clickable links to all modified files to the user.
+   Once the initial AI `pr-reviewer` approves, present the completed changes, AI review takeaways, and clickable links to all modified files to the user.
 2. **STOP and Wait for Explicit `pr approved`**:
    Do **NOT** move the task file to `tasks/done/`, commit, or rebase onto `master` until the user has reviewed the changes, had any questions or change requests resolved, and explicitly typed the phrase **`pr approved`**. Never treat general replies (`"proceed"`, `"is fine"`, `"ok"`, `"yes"`) during review discussions as final PR approval.
 
 ---
 
-## Step 8: Finalize — Move to `tasks/done/`, Rebase onto `master`, & Push to GitHub
+## Step 8: Stage 3 — Post-Approval Final AI PR Review
 
-Only after the user explicitly types **`pr approved`**:
+Immediately after the user explicitly types **`pr approved`**:
+1. Run quality gate checks:
+   ```bash
+   uv run pytest
+   uv run ruff check .
+   ```
+2. Spawn a fresh AI PR Reviewer subagent (`define_subagent` name: `pr-reviewer`, `EnableWriteTools: false`, `Role: "Security & Clean Code PR Reviewer"`) to perform a final inspection of all branch changes against `master`.
+3. Verify that all changes (including any adjustments or fixes made during human review) remain clean, secure, and compliant with `AGENTS.md`.
+4. Ensure the subagent returns `Verdict: APPROVED`. If any issues are found, resolve them and re-verify before proceeding.
+
+---
+
+## Step 9: Finalize — Move to `tasks/done/`, Rebase onto `master`, & Push to GitHub
+
+Only after the user explicitly types **`pr approved`** AND the post-approval final AI PR review returns `APPROVED`:
 1. Move `tasks/task_<number>_<short_slug>.md` into `tasks/done/` and update `tasks/README.md`.
 2. Commit the changes on the feature branch, rebase onto `master`, fast-forward merge into `master`, delete the feature branch, and push `master` to GitHub (`git push origin master`).

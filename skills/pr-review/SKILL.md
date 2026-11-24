@@ -1,14 +1,16 @@
 ---
 name: pr-review
 description: >-
-  Two-stage PR review workflow: (1) Spawns a dedicated AI PR Reviewer subagent
+  Three-stage PR review workflow: (1) Spawns an initial AI PR Reviewer subagent
   focused on Security and Clean Code (AGENTS.md) and fixes any issues it finds;
   (2) Presents the changes to the user for Human PR Review (comments, questions,
-  or change requests). Only after explicit human approval does it move the active
-  task file into `tasks/done/`, commit, rebase/merge onto `master`, and push `master` to GitHub.
+  or change requests); (3) Upon explicit human approval (`pr approved`), runs a
+  post-approval final AI PR Review to verify the final diff against `master` before
+  moving the active task file into `tasks/done/`, committing, rebasing/merging onto `master`,
+  and pushing `master` to GitHub.
 ---
 
-# Two-Stage PR Review (AI Reviewer -> Human Review -> Rebase & Archive)
+# Three-Stage PR Review (Pre-Review -> Human Review -> Post-Approval Review -> Rebase & Archive)
 
 ## Step 1: Run Quality Gate Checks
 Before invoking the reviewer subagent, ensure all automated checks pass:
@@ -36,7 +38,7 @@ uv run ruff check .
 3. If the subagent returns `Verdict: CHANGES_REQUESTED`: fix every reported issue, re-run `uv run pytest` and `uv run ruff check .`, and re-verify with the `pr-reviewer` subagent via `send_message` until it returns `Verdict: APPROVED`.
 
 ## Step 3: Stage 2 — Human PR Review (Wait for User Approval)
-Once the AI `pr-reviewer` subagent approves:
+Once the initial AI `pr-reviewer` subagent approves:
 1. Present a concise **PR Review Summary** to the user with:
    - Clickable links to all created/modified files and key symbols.
    - Summary of what the AI PR Reviewer caught and fixed.
@@ -46,8 +48,19 @@ Once the AI `pr-reviewer` subagent approves:
    - Invite the user to inspect the code, ask questions, comment, or request changes.
    - **Strict Approval Trigger**: Only treat the PR as approved when the user explicitly types **`pr approved`**. Never treat general acknowledgments (`"proceed"`, `"is fine"`, `"ok"`, `"yes"`) to intermediate questions or code tweaks as final PR approval.
 
-## Step 4: Finalize — Move Task to `tasks/done/`, Rebase onto `master`, & Push to GitHub
-Only after the user explicitly types **`pr approved`**:
+## Step 4: Stage 3 — Post-Approval Final AI PR Review
+Immediately after the user explicitly types **`pr approved`**:
+1. Run quality gate checks:
+   ```bash
+   uv run pytest
+   uv run ruff check .
+   ```
+2. Spawn a fresh AI PR Reviewer subagent (`define_subagent` name: `pr-reviewer`, `EnableWriteTools: false`, `Role: "Security & Clean Code PR Reviewer"`) to perform a final inspection of all branch changes against `master`.
+3. Verify that all changes (including any adjustments or fixes made during human review) remain clean, secure, and compliant with `AGENTS.md`.
+4. Ensure the subagent returns `Verdict: APPROVED`. If any issues are found, resolve them and re-verify before proceeding.
+
+## Step 5: Finalize — Move Task to `tasks/done/`, Rebase onto `master`, & Push to GitHub
+Only after human approval (`pr approved`) AND the post-approval final AI PR review returns `APPROVED`:
 1. Move the completed task markdown file into `tasks/done/`:
    ```bash
    mkdir -p tasks/done

@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "google-genai>=3.5.0",
+    "httpx>=0.28.0",
     "pymongo>=4.19.0",
     "pymupdf>=2.1",
     "qdrant-client>=1.20.0",

@@ -105,9 +105,10 @@ Whenever a task is mentioned, always activate and follow [`skills/task-workflow/
 3. **Devil's Advocate**: Spawn a Devil's Advocate subagent to critically grill and argue against the design plan; refine the plan based on its findings.
 4. **Design Mode & Approval**: Present the design and Devil's Advocate critique to the user, resolve trade-offs interactively, and wait for explicit user acceptance before coding.
 5. **Implement & Verify**: Implement tests (`tests/`) and code (`src/boardgamerules/`), then run `uv run pytest` and `uv run ruff check .`.
-6. **AI PR Review ([`skills/pr-review/SKILL.md`](skills/pr-review/SKILL.md))**: Spawn a separate PR Reviewer subagent focusing on **Security** and **Clean Code**, and resolve any findings until approved.
+6. **Initial AI PR Review ([`skills/pr-review/SKILL.md`](skills/pr-review/SKILL.md))**: Spawn a separate PR Reviewer subagent focusing on **Security** and **Clean Code**, and resolve any findings until approved.
 7. **Human PR Review & Approval**: Present the PR summary and changed files to the user for human review, comments, or adjustments. Wait until the user explicitly types **`pr approved`** (never interpret general replies like `"ok"`, `"proceed"`, `"is fine"`, or `"yes"` during intermediate change discussions as PR approval).
-8. **Finalize, Rebase & Push**: Only after the user explicitly types **`pr approved`**, move the task file into `tasks/done/`, commit, rebase/merge onto `master`, and push `master` to GitHub (`git push origin master`).
+8. **Post-Approval Final AI PR Review**: Immediately after the user types **`pr approved`**, spawn a fresh PR Reviewer subagent to perform a final inspection of all branch changes against `master`.
+9. **Finalize, Rebase & Push**: Only after explicit human approval **and** the post-approval review is `APPROVED`, move the task file into `tasks/done/`, commit, rebase/merge onto `master`, and push `master` to GitHub (`git push origin master`).
 
 ---
 

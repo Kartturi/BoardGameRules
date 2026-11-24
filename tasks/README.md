@@ -8,11 +8,11 @@ Each task is defined in a concise markdown file with an **Objective** and **Requ
 3. **[Task 3: NoSQL Database & Repositories](done/task_003_nosql_database_repositories.md)**
 4. **[Task 4: RAG Engine & Vector Store Module](done/task_004_rag_engine_and_vector_store.md)**
 5. **[Task 5: Batch PDF Ingestion Job](done/task_005_pdf_batch_ingestion_job.md)**
-6. **[Task 12: GitHub Actions CI Pipeline](done/task_012_github_actions_ci_pipeline.md)**
-7. **[Task 14: Centralized Structured Logging](done/task_014_centralized_logging.md)**
+6. **[Task 6: Internet API Rulebook Fetcher Module](done/task_006_internet_rulebook_fetcher.md)**
+7. **[Task 12: GitHub Actions CI Pipeline](done/task_012_github_actions_ci_pipeline.md)**
+8. **[Task 14: Centralized Structured Logging](done/task_014_centralized_logging.md)**
 
 ## Task Backlog
-6. **[Task 6: Internet API Rulebook Fetcher Module](task_006_internet_rulebook_fetcher.md)**
 7. **[Task 7: AI Fallback & Quick Recap Generator Module](task_007_ai_fallback_and_recap_generator.md)**
 8. **[Task 8: Rule Orchestrator ("Organisation Body")](task_008_rule_orchestrator_service.md)**
 9. **[Task 9: Backend HTTP API & Google OAuth Login](task_009_backend_api_and_google_auth.md)**
@@ -26,4 +26,4 @@ When a task is started, the [`task-workflow`](../skills/task-workflow/SKILL.md) 
 2. Draft a design plan and challenge it with a **Devil's Advocate** subagent.
 3. Review the design and Devil's Advocate feedback with the user in **Design Mode** until accepted.
 4. Implement the solution and unit tests, then verify with `uv run pytest` and `uv run ruff check .`.
-5. Spawn a **Security & Clean Code PR Reviewer** subagent; when approved, move the task into `tasks/done/` and rebase/merge onto `master`.
+5. Run the three-stage PR review: (a) initial AI PR Reviewer subagent, (b) Human PR Review, and (c) post-approval final AI PR Review. Only after all approvals are secured, move the task into `tasks/done/`, rebase/merge onto `master`, and push to GitHub.
