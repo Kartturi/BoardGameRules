@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
+from boardgamerules.domain.ai import GeneratedRuleAnswer
 from boardgamerules.domain.contracts import AiRuleGenerator, RagEngine
 from boardgamerules.domain.enums import ManualSource
 from boardgamerules.domain.exceptions import DomainValidationError, ManualNotFoundError
-from boardgamerules.domain.rag import RuleAnswer
+from boardgamerules.domain.rag import RuleAnswer, RuleChunk
 from boardgamerules.domain.validators import require_canonical_game_id, require_non_blank
 
 logger = logging.getLogger(__name__)
@@ -62,15 +63,33 @@ async def answer_rulebook_question(
         },
     )
 
-    answer_markdown = await ai_generator.answer_question(
+    generated = await ai_generator.answer_question(
         game_title=query.game_title,
         question=query.question,
         chunks=retrieved_chunks,
     )
+    citations = _select_citations(retrieved_chunks, generated)
     return RuleAnswer(
         game_id=query.game_id,
         question=query.question,
-        answer_markdown=answer_markdown,
-        citations=retrieved_chunks,
+        answer_markdown=generated.answer_text,
+        citations=citations,
         source=query.source,
+        found_in_rules=generated.found_in_rules,
     )
+
+
+def _select_citations(
+    retrieved_chunks: tuple[RuleChunk, ...],
+    generated: GeneratedRuleAnswer,
+) -> tuple[RuleChunk, ...]:
+    if not generated.found_in_rules:
+        return ()
+    if generated.cited_chunk_ids:
+        chunk_map = {chunk.chunk_id: chunk for chunk in retrieved_chunks}
+        matched = tuple(
+            chunk_map[chunk_id] for chunk_id in generated.cited_chunk_ids if chunk_id in chunk_map
+        )
+        if matched:
+            return matched
+    return retrieved_chunks

@@ -17,6 +17,7 @@ The primary goal is **high human readability and maintainability**. Code is read
   - Classes and variables are nouns: `TurnTracker`, `GameBoard`, `winning_score`
 - **Avoid cryptic abbreviations & academic jargon**: Favor plain, everyday words over saving keystrokes or using heavy jargon (e.g., `_list_pdf_keys_to_process()` instead of `_discover_candidate_keys()`, `dependencies` instead of `deps`).
 - **No `_and_` in function names**: If a function name needs `_and_` (like `_extract_index_and_register_manual`), it is doing too many things—split each step into its own single-purpose function.
+- **Disambiguate shadowing imports**: Never import third-party modules that collide with Python built-in module names (e.g., avoid bare `from google.genai import types`; always alias to an explicit, intention-revealing name like `from google.genai import types as genai_types`).
 
 ### 1.2 Small, Focused Functions (Single Responsibility)
 - Each function should do **one thing well**.
@@ -63,6 +64,12 @@ The primary goal is **high human readability and maintainability**. Code is read
 - Attach structured context using `extra={...}` (e.g., `game_id`, `file_key`, `chunk_count`) so logs are searchable in GCP Cloud Logging (`LOG_FORMAT=json`).
 - **Log errors once at the boundary**: low-level adapters log normal activity at `DEBUG` (and `WARNING` only when recovering, such as retries); boundaries that catch/handle failures log `ERROR`/`exception` once.
 - **Never log secrets or raw PII**: never log API keys, passwords, tokens, connection strings with credentials, emails, `google_sub`, or full user queries/rulebook text (log safe metadata like `question_length` or `chunk_count`).
+
+### 1.9 Module Organization (Stepdown Rule / Newspaper Metaphor)
+- Arrange modules like a newspaper article: high-level summary at the top, low-level details at the bottom.
+- **Top of the file**: Module docstring, imports, logger, primary domain classes/dataclasses, and public API functions.
+- **Bottom of the file**: Low-level private helper functions (prefixed with `_`), internal regex patterns, and implementation-detail parsers.
+- Readers should be able to understand what a file provides and its main public contract without scrolling through private helpers.
 
 ---
 

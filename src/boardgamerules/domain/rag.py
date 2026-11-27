@@ -35,9 +35,16 @@ class RuleAnswer:
     answer_markdown: str
     citations: tuple[RuleChunk, ...] = ()
     source: ManualSource = ManualSource.MANUAL_PDF
+    found_in_rules: bool = True
 
     def __post_init__(self) -> None:
         require_canonical_game_id(self.game_id)
         require_non_blank(self.question, "question")
         require_non_blank(self.answer_markdown, "answer_markdown")
         object.__setattr__(self, "citations", tuple(self.citations))
+        if not self.found_in_rules and self.citations:
+            raise DomainValidationError("citations must be empty when found_in_rules is False.")
+
+    @property
+    def is_verified(self) -> bool:
+        return self.source != ManualSource.AI_GENERATED

@@ -10,10 +10,13 @@ from boardgamerules.domain import (
     FetchedRulebook,
     GameManual,
     GameManualRepository,
+    GeneratedRuleAnswer,
+    GeneratedRulebook,
     NoSqlRepository,
     PdfStorage,
     PendingPdfManual,
     PendingPdfRepository,
+    QuickRecap,
     RagEngine,
     RulebookFetcher,
     RuleChunk,
@@ -107,23 +110,38 @@ class _StubRulebookFetcher(RulebookFetcher):
 
 
 class _StubAiGenerator(AiRuleGenerator):
-    async def generate_fallback_rules(self, game_title: str) -> str:
-        return f"# Rules for {game_title}"
+    async def generate_fallback_rules(self, game_title: str) -> GeneratedRulebook:
+        return GeneratedRulebook(
+            game_title=game_title,
+            overview="Overview",
+            setup_steps=("Step 1",),
+            turn_structure=("Turn 1",),
+            winning_condition="10 points",
+        )
 
     async def generate_quick_recap(
         self,
         game_title: str,
         chunks: Sequence[RuleChunk],
-    ) -> str:
-        return f"Quick recap for {game_title}"
+    ) -> QuickRecap:
+        return QuickRecap(
+            game_title=game_title,
+            goal="Win the game",
+            turn_summary=("Roll dice",),
+            is_grounded=bool(chunks),
+        )
 
     async def answer_question(
         self,
         game_title: str,
         question: str,
         chunks: Sequence[RuleChunk],
-    ) -> str:
-        return "42"
+    ) -> GeneratedRuleAnswer:
+        return GeneratedRuleAnswer(
+            answer_text="42",
+            found_in_rules=True,
+            is_grounded=True,
+        )
 
 
 class _StubPdfStorage(PdfStorage):
@@ -173,7 +191,7 @@ def test_should_satisfy_rag_fetcher_ai_and_pdf_storage_protocols(
     ai = _StubAiGenerator()
     storage = _StubPdfStorage()
 
-    async def _exercise_modules() -> tuple[FetchedRulebook, str, tuple[str, ...]]:
+    async def _exercise_modules() -> tuple[FetchedRulebook, QuickRecap, tuple[str, ...]]:
         await rag.index_chunks((sample_chunk,))
         rulebook = await fetcher.fetch_rulebook("Catan")
         recap = await ai.generate_quick_recap("Catan", (sample_chunk,))
@@ -187,5 +205,5 @@ def test_should_satisfy_rag_fetcher_ai_and_pdf_storage_protocols(
     assert isinstance(ai, AiRuleGenerator)
     assert isinstance(storage, PdfStorage)
     assert rulebook.game_title == "Catan"
-    assert "Catan" in recap
+    assert recap.game_title == "Catan"
     assert keys == ("incoming/catan.pdf",)

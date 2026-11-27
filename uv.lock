@@ -31,6 +31,7 @@ source = { editable = "." }
 dependencies = [
     { name = "google-genai" },
     { name = "httpx" },
+    { name = "pydantic" },
     { name = "pymongo" },
     { name = "pymupdf" },
     { name = "qdrant-client" },
@@ -46,6 +47,7 @@ dev = [
 requires-dist = [
     { name = "google-genai", specifier = ">=3.5.0" },
     { name = "httpx", specifier = ">=0.28.0" },
+    { name = "pydantic", specifier = ">=2.10.0" },
     { name = "pymongo", specifier = ">=4.19.0" },
     { name = "pymupdf", specifier = ">=2.1" },
     { name = "qdrant-client", specifier = ">=1.20.0" },

@@ -7,7 +7,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any
 
-from google.genai import types
+from google.genai import types as genai_types
 
 from boardgamerules.domain.exceptions import ExternalRuleFetchError
 from boardgamerules.domain.validators import require_non_blank
@@ -41,8 +41,8 @@ class GeminiRulebookUrlFinder(RulebookUrlFinder):
             response = await self._client.aio.models.generate_content(
                 model=self._model,
                 contents=prompt,
-                config=types.GenerateContentConfig(
-                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                config=genai_types.GenerateContentConfig(
+                    tools=[genai_types.Tool(google_search=genai_types.GoogleSearch())],
                     temperature=0.0,
                 ),
             )

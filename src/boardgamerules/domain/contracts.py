@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
+from boardgamerules.domain.ai import GeneratedRuleAnswer, GeneratedRulebook, QuickRecap
 from boardgamerules.domain.manual import FetchedRulebook, GameManual, PendingPdfManual
 from boardgamerules.domain.rag import RuleChunk
 from boardgamerules.domain.user import SavedUserEntry, UserProfile
@@ -118,14 +119,14 @@ class RulebookFetcher(ABC):
 
 class AiRuleGenerator(ABC):
     @abstractmethod
-    async def generate_fallback_rules(self, game_title: str) -> str: ...
+    async def generate_fallback_rules(self, game_title: str) -> GeneratedRulebook: ...
 
     @abstractmethod
     async def generate_quick_recap(
         self,
         game_title: str,
         chunks: Sequence[RuleChunk],
-    ) -> str: ...
+    ) -> QuickRecap: ...
 
     @abstractmethod
     async def answer_question(
@@ -133,7 +134,7 @@ class AiRuleGenerator(ABC):
         game_title: str,
         question: str,
         chunks: Sequence[RuleChunk],
-    ) -> str: ...
+    ) -> GeneratedRuleAnswer: ...
 
 
 # CONCEPT: [System Design] Cloud-Agnostic Blob Storage Abstraction

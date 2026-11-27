@@ -1,5 +1,6 @@
 """Domain models, contracts, and exceptions for BoardGameRules."""
 
+from boardgamerules.domain.ai import GeneratedRuleAnswer, GeneratedRulebook, QuickRecap
 from boardgamerules.domain.contracts import (
     AiRuleGenerator,
     GameManualRepository,
@@ -41,6 +42,8 @@ __all__ = [
     "FetchedRulebook",
     "GameManual",
     "GameManualRepository",
+    "GeneratedRuleAnswer",
+    "GeneratedRulebook",
     "ManualNotFoundError",
     "ManualSource",
     "ManualStatus",
@@ -49,6 +52,7 @@ __all__ = [
     "PendingPdfManual",
     "PendingPdfRepository",
     "PendingPdfStatus",
+    "QuickRecap",
     "RagEngine",
     "RagIngestionError",
     "RuleAnswer",

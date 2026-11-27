@@ -10,8 +10,11 @@ from qdrant_client import AsyncQdrantClient
 from boardgamerules.domain import (
     AiRuleGenerator,
     DomainValidationError,
+    GeneratedRuleAnswer,
+    GeneratedRulebook,
     ManualNotFoundError,
     ManualSource,
+    QuickRecap,
     RuleChunk,
 )
 from boardgamerules.rag import (
@@ -23,28 +26,50 @@ from boardgamerules.rag import (
 
 
 class _RecordingAiRuleGenerator(AiRuleGenerator):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        found_in_rules: bool = True,
+        cited_chunk_ids: tuple[str, ...] = (),
+    ) -> None:
         self.calls: list[tuple[str, str, tuple[RuleChunk, ...]]] = []
+        self.found_in_rules = found_in_rules
+        self.cited_chunk_ids = cited_chunk_ids
 
-    async def generate_fallback_rules(self, game_title: str) -> str:
-        return f"Fallback rules for {game_title}"
+    async def generate_fallback_rules(self, game_title: str) -> GeneratedRulebook:
+        return GeneratedRulebook(
+            game_title=game_title,
+            overview=f"Fallback rules for {game_title}",
+            setup_steps=("Step 1",),
+            turn_structure=("Phase 1",),
+            winning_condition="10 victory points",
+        )
 
     async def generate_quick_recap(
         self,
         game_title: str,
         chunks: Sequence[RuleChunk],
-    ) -> str:
-        return f"Recap for {game_title}"
+    ) -> QuickRecap:
+        return QuickRecap(
+            game_title=game_title,
+            goal=f"Goal for {game_title}",
+            turn_summary=("Turn summary",),
+            is_grounded=bool(chunks),
+        )
 
     async def answer_question(
         self,
         game_title: str,
         question: str,
         chunks: Sequence[RuleChunk],
-    ) -> str:
+    ) -> GeneratedRuleAnswer:
         chunks_tuple = tuple(chunks)
         self.calls.append((game_title, question, chunks_tuple))
-        return f"Grounded answer for {game_title}: {chunks_tuple[0].text}"
+        return GeneratedRuleAnswer(
+            answer_text=f"Grounded answer for {game_title}: {chunks_tuple[0].text}",
+            found_in_rules=self.found_in_rules,
+            cited_chunk_ids=self.cited_chunk_ids,
+            is_grounded=bool(chunks),
+        )
 
 
 @pytest.mark.anyio
@@ -95,6 +120,41 @@ async def test_should_retrieve_chunks_and_return_grounded_rule_answer_with_citat
     assert answer.citations[0].page_number == 9
     assert answer.citations[0].section_title == "Robber"
     assert len(ai_generator.calls) == 1
+    await client.close()
+
+
+@pytest.mark.anyio
+async def test_should_return_empty_citations_when_answer_is_not_found_in_rules() -> None:
+    # Arrange
+    client = AsyncQdrantClient(location=":memory:")
+    engine = QdrantRagEngine(
+        client=client,
+        embedder=DeterministicEmbeddingProvider(vector_size=16),
+        vector_size=16,
+    )
+    chunk = RuleChunk(
+        game_id="catan",
+        chunk_id="catan-p1-c1",
+        text="Setup rules here.",
+    )
+    await engine.index_chunks((chunk,))
+    ai_generator = _RecordingAiRuleGenerator(found_in_rules=False)
+    query = RulebookQuestion(
+        game_id="catan",
+        game_title="Catan",
+        question="Can I build a rocket ship?",
+    )
+
+    # Act
+    answer = await answer_rulebook_question(
+        rag_engine=engine,
+        ai_generator=ai_generator,
+        query=query,
+    )
+
+    # Assert
+    assert answer.found_in_rules is False
+    assert answer.citations == ()
     await client.close()
 
 
