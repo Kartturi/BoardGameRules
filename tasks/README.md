@@ -10,11 +10,11 @@ Each task is defined in a concise markdown file with an **Objective** and **Requ
 5. **[Task 5: Batch PDF Ingestion Job](done/task_005_pdf_batch_ingestion_job.md)**
 6. **[Task 6: Internet API Rulebook Fetcher Module](done/task_006_internet_rulebook_fetcher.md)**
 7. **[Task 7: AI Fallback & Quick Recap Generator Module](done/task_007_ai_fallback_and_recap_generator.md)**
-8. **[Task 12: GitHub Actions CI Pipeline](done/task_012_github_actions_ci_pipeline.md)**
-9. **[Task 14: Centralized Structured Logging](done/task_014_centralized_logging.md)**
+8. **[Task 8: Rule Orchestrator ("Organisation Body")](done/task_008_rule_orchestrator_service.md)**
+9. **[Task 12: GitHub Actions CI Pipeline](done/task_012_github_actions_ci_pipeline.md)**
+10. **[Task 14: Centralized Structured Logging](done/task_014_centralized_logging.md)**
 
 ## Task Backlog
-8. **[Task 8: Rule Orchestrator ("Organisation Body")](task_008_rule_orchestrator_service.md)**
 9. **[Task 9: Backend HTTP API & Google OAuth Login](task_009_backend_api_and_google_auth.md)**
 10. **[Task 10: React & TypeScript Frontend UI](task_010_react_typescript_frontend.md)**
 11. **[Task 11: Docker & Docker Compose Containerization](task_011_docker_containerization.md)**

@@ -71,10 +71,15 @@ Before presenting the plan to the user, challenge it with a dedicated **Devil's 
    - The proposed architecture and file/symbol changes.
    - Key points raised by the **Devil's Advocate** and how the design addresses them.
    - Planned unit test scenarios.
-2. **Ask for Design Acceptance (`ask_question`)**:
+2. **Model-Tier Handoff (Plan-Heavy -> Execute-Light)**:
+   When the user asks to plan with a higher-tier model and switch to a lower-tier model for implementation:
+   - Persist a self-contained **Technical Implementation Plan** directly into `tasks/task_<number>_<short_slug>.md` (after the Devil's Advocate refinement and/or user approval).
+   - Include exact file paths, class/dataclass/function signatures, validation invariants, error-handling rules, logging fields, `# CONCEPT:` tags, stepdown/import conventions, and the exact list of unit test cases (`test_should_<expected>_when_<condition>`).
+   - Provide a short copy-pasteable handoff prompt (e.g., `"Implement Task <N> following the Technical Implementation Plan in tasks/task_<number>_<short_slug>.md (Step 5 onwards)."`).
+3. **Ask for Design Acceptance (`ask_question`)**:
    - If there are open trade-offs or design choices, use `ask_question` to resolve them with the user in interactive Design Mode.
    - Ask the user to confirm whether they **Accept the design** or want adjustments.
-3. **Wait for Approval**:
+4. **Wait for Approval**:
    **STOP** and wait for the user's response. Do **not** write production or test code until the user accepts the design.
 
 ---

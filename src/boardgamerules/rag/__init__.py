@@ -11,6 +11,7 @@ from boardgamerules.rag.embeddings import (
     EmbeddingProvider,
     GeminiEmbeddingProvider,
 )
+from boardgamerules.rag.ingestion import PdfIngestionOptions, ingest_pdf_rulebook
 from boardgamerules.rag.pdf_extractor import (
     PdfPageText,
     PdfTextExtractor,
@@ -25,6 +26,7 @@ __all__ = [
     "EmbeddingProvider",
     "GeminiEmbeddingProvider",
     "PdfPageText",
+    "PdfIngestionOptions",
     "PdfTextExtractor",
     "PyMuPdfTextExtractor",
     "QdrantRagEngine",
@@ -34,4 +36,5 @@ __all__ = [
     "chunk_rulebook_pages",
     "create_embedding_provider_from_settings",
     "create_qdrant_client_from_settings",
+    "ingest_pdf_rulebook",
 ]

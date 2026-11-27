@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import PurePosixPath
 
@@ -17,9 +16,9 @@ from boardgamerules.domain.contracts import (
 from boardgamerules.domain.enums import ManualSource, ManualStatus
 from boardgamerules.domain.exceptions import StorageOperationError
 from boardgamerules.domain.manual import GameManual, PendingPdfManual
-from boardgamerules.domain.rag import RuleChunk
 from boardgamerules.domain.validators import compute_pdf_sha256, normalize_game_id
-from boardgamerules.rag.chunker import ChunkingConfig, chunk_rulebook_pages
+from boardgamerules.rag.chunker import ChunkingConfig
+from boardgamerules.rag.ingestion import PdfIngestionOptions, ingest_pdf_rulebook
 from boardgamerules.rag.pdf_extractor import PdfTextExtractor, PyMuPdfTextExtractor
 
 _DEFAULT_EXTRACTOR = PyMuPdfTextExtractor()
@@ -130,8 +129,16 @@ class PdfBatchIngestor:
             await self._mark_pdf_completed(pending_with_hash)
             return True
 
-        chunks = self._extract_chunks(game_id, pdf_bytes)
-        await self._replace_chunks_in_qdrant(game_id, chunks)
+        options = PdfIngestionOptions(
+            pdf_extractor=self._pdf_extractor,
+            chunking_config=self._chunking_config,
+        )
+        chunks = await ingest_pdf_rulebook(
+            game_id=game_id,
+            pdf_bytes=pdf_bytes,
+            rag_engine=self._rag_engine,
+            options=options,
+        )
         await self._save_ready_manual(pending_with_hash, game_id)
         await self._mark_pdf_completed(pending_with_hash)
         logger.info(
@@ -147,22 +154,6 @@ class PdfBatchIngestor:
     async def _is_already_indexed(self, content_sha256: str) -> bool:
         existing_manual = await self._manual_repo.get_manual_by_sha256(content_sha256)
         return existing_manual is not None
-
-    def _extract_chunks(self, game_id: str, pdf_bytes: bytes) -> tuple[RuleChunk, ...]:
-        pages = self._pdf_extractor.extract_pages(pdf_bytes)
-        return chunk_rulebook_pages(
-            game_id=game_id,
-            pages=pages,
-            config=self._chunking_config,
-        )
-
-    async def _replace_chunks_in_qdrant(
-        self,
-        game_id: str,
-        chunks: Sequence[RuleChunk],
-    ) -> None:
-        await self._rag_engine.delete_game_chunks(game_id)
-        await self._rag_engine.index_chunks(chunks)
 
     async def _save_ready_manual(self, pending: PendingPdfManual, game_id: str) -> None:
         manual = GameManual(
